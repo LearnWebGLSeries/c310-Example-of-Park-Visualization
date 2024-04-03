@@ -13,6 +13,13 @@ import {
     
     DigitalGround,
     TexturedFence,
+
+    LineGeometry,
+    LineMaterial,
+    Line2,
+
+    Line3,
+    TexturedLineMaterial,
 } from './assets/lib/three.module.min.js';
 
 window.THREE = THREE; 
@@ -365,6 +372,83 @@ function createUI(app) {
 
     app.scene.add( container );
 }
+
+function test(app) {
+    // 创建 meshline
+    const lineLoader = new THREE.TextureLoader();
+    const lineTexture = lineLoader.load("./assets/images/line.png");
+
+    const spliceNum = 20; 
+    let pos = [];
+    const highY = 10;
+    const highX = 20;
+    for (let i = 0; i <= spliceNum; i++) {
+        const num = Math.sin(Math.PI * i / spliceNum);
+
+        // pos.push(i * highX / spliceNum);
+        // pos.push(num * highY);
+        // pos.push(-i * highX / spliceNum);
+
+        pos.push(i * highX / spliceNum);
+        pos.push(0.3);
+        pos.push(num * highY);
+    } 
+
+    pos = [14.2, 0.3, -25, 14.2, 0.3, 20];
+
+    const lineGeo = new LineGeometry();
+    lineGeo.setPositions(pos);
+
+    const lineMat = new TexturedLineMaterial({
+        color: 0xFF0000,
+        linewidth: 1.5,
+        vertexColors: false, 
+        // alphaToCoverage: true,
+        worldUnits: true,
+    });
+
+    lineMat.uniforms.mytexture.value = lineTexture;
+    lineMat.uniforms.myspeed.value = 10.0;
+    lineMat.transparent = true;  
+
+    lineMat.defines.USE_TEXTURE = "";
+
+    const clock = new THREE.Clock();
+
+    app.addEventListener('beforerenderer', () => {
+        lineMat.uniforms.mytime.value = clock.getElapsedTime();
+    }); 
+
+    const line = new Line3(lineGeo, lineMat);
+
+    line.computeLineDistances(); 
+    app.scene.add(line); 
+
+
+    // 创建 video texture
+    const video = document.createElement('video');
+    
+    video.autoplay = true;
+    // video.style.display = 'none';
+    video.loop = true;
+    video.src = '../assets/videos/105243037.mp4';
+    video.muted = true;
+    document.body.appendChild(video);
+
+    const videoTexture = new THREE.VideoTexture(video);
+
+    const geometry = new THREE.PlaneGeometry( 10, 10 );
+    const material = new THREE.MeshBasicMaterial( { side: THREE.DoubleSide, map: videoTexture } );
+    const plane = new THREE.Mesh( geometry, material );
+
+    app.addEventListener('beforerenderer', () => {
+        // videoTexture.needsUpdate = true;
+    });
+
+    plane.position.y = 10;
+    app.scene.add( plane );
+
+}
     
 function createObject3D(app) {
     const scene = app.scene; 
@@ -510,7 +594,10 @@ function createObject3D(app) {
 
     // createUI
 
-    createUI(app);   
+    createUI(app);  
+    
+    
+    // test(app);
 }
 
 createObject3D(app);
